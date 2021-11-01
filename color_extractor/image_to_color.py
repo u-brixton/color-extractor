@@ -31,6 +31,7 @@ class ImageToColor(Task):
         k, labels, clusters_centers = self._cluster.get(resized[~mask])
         centers = self._selector.get(k, labels, clusters_centers)
         colors = [self._name.get(c) for c in centers]
+        hex_colors = [self._name.get_hex_color(c) for c in centers]
         flattened = list({c for l in colors for c in l})
 
         if self._settings['debug'] is None:
@@ -43,7 +44,7 @@ class ImageToColor(Task):
         clusters = np.zeros(resized.shape, np.float64)
         clusters[~mask] = colored_labels
 
-        return flattened, {
+        return hex_colors, flattened, {
             'resized': resized,
             'back': back_mask,
             'skin': skin_mask,
