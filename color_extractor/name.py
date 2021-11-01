@@ -2,6 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
+from matplotlib.colors import rgb2hex
 
 from .task import Task
 
@@ -71,6 +72,8 @@ class Name(Task):
             self._scaler = StandardScaler()
             samples = self._scaler.fit_transform(samples)
 
+        print(f" train samples: {samples}")
+        print(f" train labels: {labels}")
         self._classifier.fit(samples, labels)
 
     def get(self, sample):
@@ -89,6 +92,21 @@ class Name(Task):
         sample = sample.reshape((1, -1))
         labels += [self._names[i] for i in self._classifier.predict(sample)]
         return labels
+    
+    def get_hex_color(self, sample):
+        sample = sample * 255
+        if self._settings['hard_monochrome']:
+            labels = self._hard_monochrome(sample)
+            if labels:
+                return labels
+
+        if self._settings['classifier.scale']:
+            sample = self._scaler.transform(sample)
+
+        sample = sample.reshape((1, -1))
+        sample = sample / 255
+        hex_colors = [rgb2hex(el) for el in sample]
+        return hex_colors
 
     def _hard_monochrome(self, sample):
         """
