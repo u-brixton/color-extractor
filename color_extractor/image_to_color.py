@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import chain
 
 from .back import Back
 from .cluster import Cluster
@@ -7,11 +8,11 @@ from .resize import Resize
 from .selector import Selector
 from .skin import Skin
 from .task import Task
+from .exceptions import KMeansException
 
 
 class ImageToColor(Task):
     def __init__(self, samples, labels, settings=None):
-
         if settings is None:
             settings = {}
 
@@ -23,6 +24,21 @@ class ImageToColor(Task):
         self._selector = Selector(self._settings['selector'])
         self._name = Name(samples, labels, self._settings['name'])
 
+    def get_hex_colors(self, img):
+        resized = self._resize.get(img)
+        back_mask = self._back.get(resized)
+        skin_mask = self._skin.get(resized)
+        mask = back_mask | skin_mask
+        mask = back_mask
+        try:
+            k, labels, clusters_centers = self._cluster.get(resized[~mask])
+        except KMeansException:
+            # sometimes skin mask works incorrectly, so we do not use it
+            k, labels, clusters_centers = self._cluster.get(resized[~back_mask])
+        centers = self._selector.get(k, labels, clusters_centers)
+        hex_colors = list(chain(*[self._name.get_hex_color(c) for c in centers]))
+        return hex_colors
+    
     def get(self, img):
         resized = self._resize.get(img)
         back_mask = self._back.get(resized)
@@ -31,7 +47,7 @@ class ImageToColor(Task):
         k, labels, clusters_centers = self._cluster.get(resized[~mask])
         centers = self._selector.get(k, labels, clusters_centers)
         colors = [self._name.get(c) for c in centers]
-        hex_colors = [self._name.get_hex_color(c) for c in centers]
+        hex_colors = list(chain(*[self._name.get_hex_color(c) for c in centers]))
         flattened = list({c for l in colors for c in l})
 
         if self._settings['debug'] is None:

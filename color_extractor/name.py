@@ -72,8 +72,6 @@ class Name(Task):
             self._scaler = StandardScaler()
             samples = self._scaler.fit_transform(samples)
 
-        print(f" train samples: {samples}")
-        print(f" train labels: {labels}")
         self._classifier.fit(samples, labels)
 
     def get(self, sample):
@@ -95,10 +93,6 @@ class Name(Task):
     
     def get_hex_color(self, sample):
         sample = sample * 255
-        if self._settings['hard_monochrome']:
-            labels = self._hard_monochrome(sample)
-            if labels:
-                return labels
 
         if self._settings['classifier.scale']:
             sample = self._scaler.transform(sample)
