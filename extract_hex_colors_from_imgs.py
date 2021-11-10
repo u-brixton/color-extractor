@@ -4,6 +4,7 @@ import pandas as pd
 from skimage import io
 from tqdm.autonotebook import tqdm
 from pathlib import Path
+import csv
 
 import color_extractor
 from color_extractor import ImageToColor
@@ -32,14 +33,16 @@ def main(img_folder_path, output_csv_path):
     img_to_color = ImageToColor(npz['samples'], npz['labels'], settings)
     fls = sorted(list(Path(img_folder_path).glob("*.jpg")))
 
-    res = []
-    for fl in tqdm(fls):
-        img = io.imread(fl)
-        res.append((fl.name, img_to_color.get_hex_colors(img)))
-
-    res = pd.DataFrame(res, columns=['fname', "hex_color"])
-    res['hex_color'] = res['hex_color'].apply(lambda x: ", ".join(x))
-    res.to_csv(output_csv_path, index=False)
+    open(output_csv_path, 'w').close()
+    with open(output_csv_path, 'a', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['fname', "hex_color"])
+        writer.writeheader()
+        for fl in tqdm(fls):
+            img = io.imread(fl)
+            hex_colors = ", ".join(img_to_color.get_hex_colors(img))
+            writer.writerow({'fname': fl.name, "hex_color": hex_colors})
+    
+    return res
 
 if __name__ == "__main__":
     args = _parse_args()
