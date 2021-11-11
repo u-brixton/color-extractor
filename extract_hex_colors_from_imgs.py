@@ -41,8 +41,6 @@ def main(img_folder_path, output_csv_path):
             img = io.imread(fl)
             hex_colors = ", ".join(img_to_color.get_hex_colors(img))
             writer.writerow({'fname': fl.name, "hex_color": hex_colors})
-    
-    return res
 
 if __name__ == "__main__":
     args = _parse_args()
