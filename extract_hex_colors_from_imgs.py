@@ -38,9 +38,14 @@ def main(img_folder_path, output_csv_path):
         writer = csv.DictWriter(f, fieldnames=['fname', "hex_color"])
         writer.writeheader()
         for fl in tqdm(fls):
-            img = io.imread(fl)
-            hex_colors = ", ".join(img_to_color.get_hex_colors(img))
-            writer.writerow({'fname': fl.name, "hex_color": hex_colors})
+            try:
+                img = io.imread(fl)
+                hex_colors = ", ".join(img_to_color.get_hex_colors(img))
+                writer.writerow({'fname': fl.name, "hex_color": hex_colors})
+            except ValueError as err:
+                print(f'error with fname {fl.name}')
+                print(err)
+
 
 if __name__ == "__main__":
     args = _parse_args()
